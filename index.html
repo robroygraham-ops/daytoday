@@ -1,181 +1,76 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>daytoday — Items index</title>
+  <meta charset="UTF-8">
+  <title>Daytoday – Page Index</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <style>
-    :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;line-height:1.4;color:#111}
-    body{max-width:980px;margin:28px auto;padding:0 18px}
-    header{display:flex;align-items:center;gap:16px;margin-bottom:18px}
-    h1{font-size:1.4rem;margin:0}
-    .meta{color:#555;font-size:0.9rem}
-    input[type="search"]{width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;box-sizing:border-box;margin:12px 0}
-    ul.items{list-style:none;padding:0;margin:0}
-    li.item{padding:12px;border:1px solid #eee;border-radius:8px;margin-bottom:10px;transition:background .12s}
-    li.item:hover{background:#fafafa}
-    a.item-link{font-weight:600;color:#0366d6;text-decoration:none}
-    .path{display:block;color:#666;font-size:0.9rem;margin-top:6px}
-    .badge{background:#f1f8ff;color:#0366d6;border-radius:999px;padding:4px 8px;font-size:0.8rem;margin-left:8px}
-    .status{color:#777;font-size:0.9rem;margin-top:6px}
-    footer{margin-top:28px;color:#666;font-size:0.9rem}
-    .loading{color:#666}
-    @media (max-width:520px){h1{font-size:1.15rem}}
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f5f7fa;
+      margin: 0;
+      padding: 40px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .list {
+      max-width: 600px;
+      background: #ffffff;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 20px;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    li {
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    li:last-child {
+      border-bottom: none;
+    }
+
+    a {
+      display: block;
+      padding: 12px 10px;
+      text-decoration: none;
+      color: #0366d6;
+      font-weight: 500;
+    }
+
+    a:hover {
+      background: #f0f4ff;
+    }
   </style>
 </head>
 <body>
-  <header>
-    <div>
-      <h1>daytoday — Items index <span class="badge">auto</span></h1>
-      <div class="meta">Repository: <strong>robroygraham-ops/daytoday</strong></div>
-    </div>
-  </header>
 
-  <p>
-    This page lists repository files (Markdown, HTML, TXT) using the GitHub API.
-    Use the search box to filter items by filename or path.
-  </p>
+<h1>Available Pages</h1>
 
-  <input id="q" type="search" placeholder="Search filenames or paths (e.g. notes, 2026-01)">
+<div class="list">
+  <ul>
+    <li><a href="form-generator-v2.html">form-generator-v2.html</a></li>
+    <li><a href="qrcodegenerator.html">qrcodegenerator.html</a></li>
 
-  <div id="status" class="loading">Loading items…</div>
-  <ul id="results" class="items" aria-live="polite"></ul>
+    <li><a href="testsite1-form.html">testsite1-form.html</a></li>
+    <li><a href="testsite1-results.html">testsite1-results.html</a></li>
 
-  <footer>
-    <div>Generated client-side — uses GitHub API (unauthenticated limits apply).</div>
-    <div>If you want server-generated lists or a different format, tell me and I can update the page.</div>
-    <div id="more" class="status"></div>
-  </footer>
+    <li><a href="testsite2-form.html">testsite2-form.html</a></li>
+    <li><a href="testsite2-results.html">testsite2-results.html</a></li>
 
-  <script>
-    (function () {
-      // Repo configuration - change branch if needed
-      const owner = "robroygraham-ops";
-      const repo = "daytoday";
-      const branch = "main"; // change to "master" or another branch if your default differs
+    <li><a href="testsite3-form.html">testsite3-form.html</a></li>
+    <li><a href="testsite3-results.html">testsite3-results.html</a></li>
+  </ul>
+</div>
 
-      // File extensions we consider "items"
-      const exts = [".md", ".markdown", ".txt", ".html", ".htm"];
-
-      const statusEl = document.getElementById("status");
-      const resultsEl = document.getElementById("results");
-      const qEl = document.getElementById("q");
-      const moreEl = document.getElementById("more");
-
-      let items = [];
-
-      // Build a GitHub code search query for the extensions
-      function buildSearchQuery() {
-        const extQueries = exts.map(e => `extension:${e.replace('.', '')}`);
-        // search in repository
-        return `repo:${owner}/${repo} ${extQueries.join(" ")}`;
-      }
-
-      // URL to view more results on GitHub (code search)
-      function githubSearchUrl() {
-        const extParts = exts.map(e => `extension:${e.replace('.', '')}`).join(" ");
-        return `https://github.com/search?q=repo:${owner}/${repo}+${encodeURIComponent(extParts)}&type=code`;
-      }
-
-      // For .html/.htm files we'll link to a rendered preview using raw.githack.com
-      function previewUrlFor(path) {
-        return `https://raw.githack.com/${owner}/${repo}/${branch}/${path}`;
-      }
-
-      // Raw content URL (can be used when preview not desired)
-      function rawUrlFor(path) {
-        return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`;
-      }
-
-      // GitHub blob URL
-      function blobUrlFor(path) {
-        return `https://github.com/${owner}/${repo}/blob/${branch}/${path}`;
-      }
-
-      function renderList(filtered) {
-        resultsEl.innerHTML = "";
-        if (filtered.length === 0) {
-          statusEl.textContent = "No items found.";
-          return;
-        }
-        statusEl.textContent = "";
-
-        filtered.forEach(it => {
-          const li = document.createElement('li');
-          li.className = 'item';
-
-          const a = document.createElement('a');
-          a.className = 'item-link';
-          a.textContent = it.name;
-          a.target = '_blank';
-          a.rel = 'noopener';
-
-          // If it's an HTML file, link to the rendered preview; otherwise link to the GitHub blob
-          if (/\.html?$/.test(it.path)) {
-            a.href = previewUrlFor(it.path);
-            const note = document.createElement('span');
-            note.className = 'badge';
-            note.textContent = 'preview';
-            li.appendChild(note);
-          } else {
-            a.href = blobUrlFor(it.path);
-          }
-
-          li.appendChild(a);
-
-          const pathEl = document.createElement('span');
-          pathEl.className = 'path';
-          pathEl.textContent = it.path;
-          li.appendChild(pathEl);
-
-          resultsEl.appendChild(li);
-        });
-      }
-
-      function filterAndRender() {
-        const q = (qEl.value || '').toLowerCase().trim();
-        const filtered = items.filter(it => it.name.toLowerCase().includes(q) || it.path.toLowerCase().includes(q));
-        renderList(filtered);
-      }
-
-      qEl.addEventListener('input', filterAndRender);
-
-      async function fetchItems() {
-        try {
-          statusEl.textContent = 'Loading items…';
-
-          // Build search query - note: unauthenticated GitHub search has limits and may return incomplete results
-          const q = buildSearchQuery();
-          const url = `https://api.github.com/search/code?q=${encodeURIComponent(q)}&per_page=100`;
-
-          const res = await fetch(url);
-          if (!res.ok) throw new Error('GitHub API error: ' + res.status);
-
-          const data = await res.json();
-
-          // Map results
-          items = (data.items || []).map(i => ({
-            name: i.name,
-            path: i.path,
-            html_url: i.html_url
-          }));
-
-          // Inform about possible incompleteness and link to GitHub search UI
-          moreEl.innerHTML = `Note: GitHub code search may be limited; view more results on <a href="${githubSearchUrl()}" target="_blank" rel="noopener">GitHub</a>.`;
-
-          if (items.length === 0) {
-            statusEl.textContent = 'No items found.';
-            return;
-          }
-
-          renderList(items);
-        } catch (err) {
-          statusEl.textContent = 'Failed to load items: ' + err.message;
-        }
-      }
-
-      fetchItems();
-    })();
-  </script>
 </body>
 </html>
