@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>daytoday — Items index</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;line-height:1.4;color:#111}
+    body{max-width:980px;margin:28px auto;padding:0 18px}
+    header{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+    h1{font-size:1.4rem;margin:0}
+    .meta{color:#555;font-size:0.9rem}
+    input[type="search"]{width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;box-sizing:border-box;margin:12px 0}
+    ul.items{list-style:none;padding:0;margin:0}
+    li.item{padding:12px;border:1px solid #eee;border-radius:8px;margin-bottom:10px;transition:background .12s}
+    li.item:hover{background:#fafafa}
+    a.item-link{font-weight:600;color:#0366d6;text-decoration:none}
+    .path{display:block;color:#666;font-size:0.9rem;margin-top:6px}
+    .badge{background:#f1f8ff;color:#0366d6;border-radius:999px;padding:4px 8px;font-size:0.8rem;margin-left:8px}
+    .status{color:#777;font-size:0.9rem;margin-top:6px}
+    footer{margin-top:28px;color:#666;font-size:0.9rem}
+    .loading{color:#666}
+    @media (max-width:520px){h1{font-size:1.15rem}}
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>daytoday — Items index <span class="badge">auto</span></h1>
+      <div class="meta">Repository: <strong>robroygraham-ops/daytoday</strong></div>
+    </div>
+  </header>
+
+  <p>
+    This page lists repository files (Markdown, HTML, TXT) using the GitHub API.
+    Use the search box to filter items by filename or path.
+  </p>
+
+  <input id="q" type="search" placeholder="Search filenames or paths (e.g. notes, 2026-01)">
+
+  <div id="status" class="loading">Loading items…</div>
+  <ul id="results" class="items" aria-live="polite"></ul>
+
+  <footer>
+    <div>Generated client-side — uses GitHub API (unauthenticated limits apply).</div>
+    <div>If you want server-generated lists or a different format, tell me and I can update the page.</div>
+  </footer>
+
+  <script>
+    (function () {
+      // Repo configuration - change branch if needed
+      const owner = "robroygraham-ops";
+      const repo = "daytoday";
+      const branch = "main"; // change to "master" or another branch if your default differs
+
+      // File extensions we consider "items"
+      const exts = [".md", ".markdown", ".txt", ".html", ".htm"];
+
+      const statusEl = document.getElementById("status");
+      const resultsEl = document.getElementById("results");
+      const qEl = document.getElementById("q");
+
+      function isItem(path) {
+        const lower = path.toLowerCase();
+        return exts.some(ext => lower.endsWith(ext));
+      }
+
+      function githubTreeUrl() {
+        // Fetch the repo tree recursively
+        return `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`;
+      }
+
+      function blobUrl(path) {
+        return `https://github.com/${owner}/${repo}/blob/${branch}/${path}`;
+      }
+
+      function render(items) {
+        resultsEl.innerHTML = "";
+        if (!items.length) {
+          statusEl.textContent = "No items found.";
+          return;
+        }
+        statusEl.textContent = `${items.length} item${items.length === 1 ? "" : "s"} found.`;
+        const frag = document.createDocumentFragment();
+        items.forEach(it => {
+          const li = document.createElement("li");
+          li.className = "item";
+
+          const a = document.createElement("a");
+          a.className = "item-link";
+          a.href = blobUrl(it.path);
+          a.target = "_blank";
+          a.rel = "noopener noreferrer";
+          a.textContent = it.name;
+
+          const pathSpan = document.createElement("span");
+          pathSpan.className = "path";
+          pathSpan.textContent = it.path;
+
+          const status = document.createElement("div");
+          status.className = "status";
+          status.textContent = `size: ${it.size} bytes`;
+
+          li.appendChild(a);
+          li.appendChild(pathSpan);
+          li.appendChild(status);
+          frag.appendChild(li);
+        });
+        resultsEl.appendChild(frag);
+      }
+
+      function normalizeQuery(s) {
+        return (s || "").trim().toLowerCase();
+      }
+
+      function filterItems(items, q) {
+        if (!q) return items;
+        return items.filter(it => (it.path + " " + it.name).toLowerCase().includes(q));
+      }
+
+      async function fetchItems() {
+        statusEl.textContent = "Fetching repository tree…";
+        try {
+          const res = await fetch(githubTreeUrl());
+          if (!res.ok) {
+            throw new Error(`GitHub API returned ${res.status} ${res.statusText}`);
+          }
+          const json = await res.json();
+          if (!json.tree) {
+            throw new Error("Unexpected API response structure.");
+          }
+          // tree entries have {path, mode, type, sha, size?}
+          let items = json.tree
+            .filter(t => t.type === "blob" && isItem(t.path))
+            .map(t => {
+              const parts = t.path.split("/");
+              return {
+                path: t.path,
+                name: parts[parts.length - 1],
+                size: t.size || 0
+              };
+            })
+            .sort((a, b) => a.path.localeCompare(b.path));
+          return items;
+        } catch (err) {
+          console.error(err);
+          statusEl.textContent = "Error fetching items: " + err.message;
+          return [];
+        }
+      }
+
+      // Main flow
+      let allItems = [];
+      fetchItems().then(items => {
+        allItems = items;
+        render(allItems);
+      });
+
+      // Search handling
+      let timer = null;
+      qEl.addEventListener("input", () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          const q = normalizeQuery(qEl.value);
+          const filtered = filterItems(allItems, q);
+          render(filtered);
+        }, 170);
+      });
+
+    })();
+  </script>
+</body>
+</html>
