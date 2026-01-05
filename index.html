@@ -44,6 +44,7 @@
   <footer>
     <div>Generated client-side — uses GitHub API (unauthenticated limits apply).</div>
     <div>If you want server-generated lists or a different format, tell me and I can update the page.</div>
+    <div id="more" class="status"></div>
   </footer>
 
   <script>
@@ -59,114 +60,121 @@
       const statusEl = document.getElementById("status");
       const resultsEl = document.getElementById("results");
       const qEl = document.getElementById("q");
+      const moreEl = document.getElementById("more");
 
-      function isItem(path) {
-        const lower = path.toLowerCase();
-        return exts.some(ext => lower.endsWith(ext));
+      let items = [];
+
+      // Build a GitHub code search query for the extensions
+      function buildSearchQuery() {
+        const extQueries = exts.map(e => `extension:${e.replace('.', '')}`);
+        // search in repository
+        return `repo:${owner}/${repo} ${extQueries.join(" ")}`;
       }
 
-      function githubTreeUrl() {
-        // Fetch the repo tree recursively
-        return `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`;
+      // URL to view more results on GitHub (code search)
+      function githubSearchUrl() {
+        const extParts = exts.map(e => `extension:${e.replace('.', '')}`).join(" ");
+        return `https://github.com/search?q=repo:${owner}/${repo}+${encodeURIComponent(extParts)}&type=code`;
       }
 
-      function blobUrl(path) {
+      // For .html/.htm files we'll link to a rendered preview using raw.githack.com
+      function previewUrlFor(path) {
+        return `https://raw.githack.com/${owner}/${repo}/${branch}/${path}`;
+      }
+
+      // Raw content URL (can be used when preview not desired)
+      function rawUrlFor(path) {
+        return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`;
+      }
+
+      // GitHub blob URL
+      function blobUrlFor(path) {
         return `https://github.com/${owner}/${repo}/blob/${branch}/${path}`;
       }
 
-      function render(items) {
+      function renderList(filtered) {
         resultsEl.innerHTML = "";
-        if (!items.length) {
+        if (filtered.length === 0) {
           statusEl.textContent = "No items found.";
           return;
         }
-        statusEl.textContent = `${items.length} item${items.length === 1 ? "" : "s"} found.`;
-        const frag = document.createDocumentFragment();
-        items.forEach(it => {
-          const li = document.createElement("li");
-          li.className = "item";
+        statusEl.textContent = "";
 
-          const a = document.createElement("a");
-          a.className = "item-link";
-          a.href = blobUrl(it.path);
-          a.target = "_blank";
-          a.rel = "noopener noreferrer";
+        filtered.forEach(it => {
+          const li = document.createElement('li');
+          li.className = 'item';
+
+          const a = document.createElement('a');
+          a.className = 'item-link';
           a.textContent = it.name;
+          a.target = '_blank';
+          a.rel = 'noopener';
 
-          const pathSpan = document.createElement("span");
-          pathSpan.className = "path";
-          pathSpan.textContent = it.path;
-
-          const status = document.createElement("div");
-          status.className = "status";
-          status.textContent = `size: ${it.size} bytes`;
+          // If it's an HTML file, link to the rendered preview; otherwise link to the GitHub blob
+          if (/\.html?$/.test(it.path)) {
+            a.href = previewUrlFor(it.path);
+            const note = document.createElement('span');
+            note.className = 'badge';
+            note.textContent = 'preview';
+            li.appendChild(note);
+          } else {
+            a.href = blobUrlFor(it.path);
+          }
 
           li.appendChild(a);
-          li.appendChild(pathSpan);
-          li.appendChild(status);
-          frag.appendChild(li);
+
+          const pathEl = document.createElement('span');
+          pathEl.className = 'path';
+          pathEl.textContent = it.path;
+          li.appendChild(pathEl);
+
+          resultsEl.appendChild(li);
         });
-        resultsEl.appendChild(frag);
       }
 
-      function normalizeQuery(s) {
-        return (s || "").trim().toLowerCase();
+      function filterAndRender() {
+        const q = (qEl.value || '').toLowerCase().trim();
+        const filtered = items.filter(it => it.name.toLowerCase().includes(q) || it.path.toLowerCase().includes(q));
+        renderList(filtered);
       }
 
-      function filterItems(items, q) {
-        if (!q) return items;
-        return items.filter(it => (it.path + " " + it.name).toLowerCase().includes(q));
-      }
+      qEl.addEventListener('input', filterAndRender);
 
       async function fetchItems() {
-        statusEl.textContent = "Fetching repository tree…";
         try {
-          const res = await fetch(githubTreeUrl());
-          if (!res.ok) {
-            throw new Error(`GitHub API returned ${res.status} ${res.statusText}`);
+          statusEl.textContent = 'Loading items…';
+
+          // Build search query - note: unauthenticated GitHub search has limits and may return incomplete results
+          const q = buildSearchQuery();
+          const url = `https://api.github.com/search/code?q=${encodeURIComponent(q)}&per_page=100`;
+
+          const res = await fetch(url);
+          if (!res.ok) throw new Error('GitHub API error: ' + res.status);
+
+          const data = await res.json();
+
+          // Map results
+          items = (data.items || []).map(i => ({
+            name: i.name,
+            path: i.path,
+            html_url: i.html_url
+          }));
+
+          // Inform about possible incompleteness and link to GitHub search UI
+          moreEl.innerHTML = `Note: GitHub code search may be limited; view more results on <a href="${githubSearchUrl()}" target="_blank" rel="noopener">GitHub</a>.`;
+
+          if (items.length === 0) {
+            statusEl.textContent = 'No items found.';
+            return;
           }
-          const json = await res.json();
-          if (!json.tree) {
-            throw new Error("Unexpected API response structure.");
-          }
-          // tree entries have {path, mode, type, sha, size?}
-          let items = json.tree
-            .filter(t => t.type === "blob" && isItem(t.path))
-            .map(t => {
-              const parts = t.path.split("/");
-              return {
-                path: t.path,
-                name: parts[parts.length - 1],
-                size: t.size || 0
-              };
-            })
-            .sort((a, b) => a.path.localeCompare(b.path));
-          return items;
+
+          renderList(items);
         } catch (err) {
-          console.error(err);
-          statusEl.textContent = "Error fetching items: " + err.message;
-          return [];
+          statusEl.textContent = 'Failed to load items: ' + err.message;
         }
       }
 
-      // Main flow
-      let allItems = [];
-      fetchItems().then(items => {
-        allItems = items;
-        render(allItems);
-      });
-
-      // Search handling
-      let timer = null;
-      qEl.addEventListener("input", () => {
-        clearTimeout(timer);
-        timer = setTimeout(() => {
-          const q = normalizeQuery(qEl.value);
-          const filtered = filterItems(allItems, q);
-          render(filtered);
-        }, 170);
-      });
-
+      fetchItems();
     })();
   </script>
 </body>
