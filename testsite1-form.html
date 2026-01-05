@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Form - testsite1</title>
+<style>
+body{font-family:Arial;background:#5f7a94;min-height:100vh;padding:20px;margin:0}
+.container{max-width:900px;margin:0 auto;background:white;border-radius:15px;overflow:hidden;box-shadow:0 20px 40px rgba(0,0,0,0.2)}
+.header{background:linear-gradient(135deg,#4facfe,#00f2fe);color:white;padding:30px;text-align:center}
+.header h1{font-size:2em;margin:0}
+.header h2{font-size:1.3em;margin:10px 0 0 0}
+.content{padding:30px}
+.question{display:flex;justify-content:space-between;align-items:center;padding:15px;margin:10px 0;background:#f9f9f9;border-radius:8px}
+.question label{flex:1;font-size:1.05em}
+.buttons{display:flex;gap:8px}
+.btn{padding:8px 20px;border:none;border-radius:20px;font-weight:bold;cursor:pointer;font-size:0.95em}
+.btn-yes{background:#4caf50;color:white}
+.btn-no{background:#f44336;color:white}
+.btn.active{box-shadow:0 0 0 3px rgba(0,0,0,0.2);transform:scale(1.05)}
+.btn.inactive{background:#ccc;opacity:0.5}
+.submit-btn{background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:15px 40px;border:none;border-radius:25px;font-size:1.2em;font-weight:bold;cursor:pointer;margin:20px auto;display:block}
+.message{padding:15px;margin-bottom:20px;border-radius:8px;text-align:center;font-weight:bold}
+.success{background:#d4edda;color:#155724}
+.error{background:#f8d7da;color:#721c24}
+.link-box{background:#e3f2fd;padding:15px;border-radius:8px;margin-top:20px;text-align:center}
+.link-box a{color:#1976d2;text-decoration:none;font-weight:bold;font-size:1.1em}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header">
+<h1>Daytoday SOW Form</h1>
+<h2>Site: testsite1</h2>
+<p id="formDate" style="margin:10px 0 0 0;font-size:1.1em;opacity:0.95"></p>
+</div>
+<div class="content">
+<div id="msg"></div>
+<div id="form"></div>
+<button class="submit-btn" onclick="submitForm()">Submit Form</button>
+<div class="link-box">
+<p style="margin:0 0 10px 0">Want to view submission history?</p>
+<a href="testsite1-results.html">Open Results Viewer →</a>
+</div>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var SUPABASE_URL="https://hkrktfmvxgctjeivmobz.supabase.co";
+var SUPABASE_KEY="sb_publishable_a5_CAmMfSQrlVzUy3YhUWw_IQHb4RBy";
+var SITE_ID="testsite1";
+var SITE_NAME="testsite1";
+var supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+var questions=[
+{id:"q1",label:"Enable email notifications"},
+{id:"q2",label:"Subscribe to newsletter"},
+{id:"q3",label:"Enable two-factor authentication"},
+{id:"q4",label:"Make profile public"},
+{id:"q5",label:"Allow data sharing with partners"},
+{id:"q6",label:"Enable usage analytics"},
+{id:"q7",label:"Receive SMS alerts"},
+{id:"q8",label:"Enable push notifications"},
+{id:"q9",label:"Receive weekly digest"},
+{id:"q10",label:"Enable dark mode"},
+{id:"q11",label:"Enable auto-save"},
+{id:"q12",label:"Enable beta features"}
+];
+var answers={};
+function renderForm(){var html="";for(var i=0;i<questions.length;i++){var q=questions[i];
+var yc=answers[q.id]===true?"active":(answers[q.id]===false?"inactive":"");
+var nc=answers[q.id]===false?"active":(answers[q.id]===true?"inactive":"");
+html+="<div class=\"question\">";
+html+="<label>"+q.label+"</label>";
+html+="<div class=\"buttons\">";
+html+="<button class=\"btn btn-yes "+yc+"\" onclick=\"setAnswer('"+q.id+"',true)\">Yes</button>";
+html+="<button class=\"btn btn-no "+nc+"\" onclick=\"setAnswer('"+q.id+"',false)\">No</button>";
+html+="</div></div>";}
+document.getElementById("form").innerHTML=html;}
+function setAnswer(qid,val){answers[qid]=val;renderForm();}
+function showMsg(text,type){var box=document.getElementById("msg");
+box.innerHTML="<div class=\"message "+type+"\">"+text+"</div>";
+if(type==="success")setTimeout(function(){box.innerHTML="";},3000);}
+function submitForm(){var missing=[];
+for(var i=0;i<questions.length;i++){if(answers[questions[i].id]===undefined)missing.push(questions[i]);}
+if(missing.length>0){showMsg("Please answer all questions ("+missing.length+" remaining)","error");return;}
+supabase.from("submissions").insert({site_id:SITE_ID,site_name:SITE_NAME,responses:answers,timestamp:new Date().toISOString()}).then(function(result){
+if(result.error){showMsg("Error: "+result.error.message,"error");}
+else{showMsg("Form submitted successfully!","success");answers={};renderForm();}});}
+renderForm();
+var today=new Date();
+document.getElementById("formDate").textContent=today.toLocaleDateString("en-US",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+</script>
+</body>
+</html>
