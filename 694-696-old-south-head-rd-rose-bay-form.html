@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Form - 694-696 Old South Head Rd, Rose Bay</title>
+<style>
+body{font-family:Arial;background:#5f7a94;min-height:100vh;padding:20px;margin:0}
+.container{max-width:900px;margin:0 auto;background:white;border-radius:15px;overflow:hidden;box-shadow:0 20px 40px rgba(0,0,0,0.2)}
+.header{background:linear-gradient(135deg,#4facfe,#00f2fe);color:white;padding:30px;text-align:center}
+.header h1{font-size:2em;margin:0}
+.header h2{font-size:1.3em;margin:10px 0 0 0}
+.content{padding:30px}
+.question{display:flex;justify-content:space-between;align-items:center;padding:15px;margin:10px 0;background:#f9f9f9;border-radius:8px}
+.question label{flex:1;font-size:1.05em}
+.buttons{display:flex;gap:8px}
+.btn{padding:8px 20px;border:none;border-radius:20px;font-weight:bold;cursor:pointer;font-size:0.95em}
+.btn-yes{background:#4caf50;color:white}
+.btn-no{background:#f44336;color:white}
+.btn.active{box-shadow:0 0 0 3px rgba(0,0,0,0.2);transform:scale(1.05)}
+.btn.inactive{background:#ccc;opacity:0.5}
+.submit-btn{background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:15px 40px;border:none;border-radius:25px;font-size:1.2em;font-weight:bold;cursor:pointer;margin:20px auto;display:block}
+.message{padding:15px;margin-bottom:20px;border-radius:8px;text-align:center;font-weight:bold}
+.success{background:#d4edda;color:#155724}
+.error{background:#f8d7da;color:#721c24}
+.link-box{background:#e3f2fd;padding:15px;border-radius:8px;margin-top:20px;text-align:center}
+.link-box a{color:#1976d2;text-decoration:none;font-weight:bold;font-size:1.1em}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header">
+<h1>Daytoday Real Time SOW Status Form</h1>
+<h2>Site: 694-696 Old South Head Rd, Rose Bay</h2>
+<p id="formDate" style="margin:10px 0 0 0;font-size:1.1em;opacity:0.95"></p>
+</div>
+<div class="content">
+<div id="msg"></div>
+<div id="form"></div>
+<button class="submit-btn" onclick="submitForm()">Submit Form</button>
+<div class="link-box">
+<p style="margin:0 0 10px 0">Want to view submission history?</p>
+<a href="694-696-old-south-head-rd-rose-bay-results.html">Open Results Viewer →</a>
+</div>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var SUPABASE_URL="https://hkrktfmvxgctjeivmobz.supabase.co";
+var SUPABASE_KEY="sb_publishable_a5_CAmMfSQrlVzUy3YhUWw_IQHb4RBy";
+var SITE_ID="694-696-old-south-head-rd-rose-bay";
+var SITE_NAME="694-696 Old South Head Rd, Rose Bay";
+var supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+var questions=[
+{id:"q1",label:"Vacuuming and mopping internal floors - Weekly"},
+{id:"q2",label:"Polishing foyer glass doors and glass panels x 4 entries (car park foyer included) - Weekly"},
+{id:"q3",label:"Wiping down common door handles - Weekly"},
+{id:"q4",label:"Wiping down balustrades, handrails, skirting boards, power points, light switches - Weekly"},
+{id:"q5",label:"Wiping down light fittings - As required"},
+{id:"q6",label:"Polishing lift and lift tracks, 1 lift - Weekly"},
+{id:"q7",label:"Cleaning internal windows and windowsills - Weekly"},
+{id:"q8",label:"Removing cobwebs throughout the SP, internally and externally - Weekly"},
+{id:"q9",label:"Collecting rubbish throughout the SP, internally and externally - Weekly"},
+{id:"q10",label:"Wiping down intercoms - Weekly"},
+{id:"q11",label:"Wiping down letterboxes and removing junk mail - Weekly"},
+{id:"q12",label:"Deodorising hallways - Weekly"},
+{id:"q1768462010282",label:"Removing marks from walls (where possible) - As required"},
+{id:"q1768462018220",label:"Wiping down common doors, fire doors included - As required"},
+{id:"q1768462025402",label:"Clearing stormwater drains - Weekly"},
+{id:"q1768462034387",label:"Air blowing tiled footpath and driveway, and collecting foliage - Weekly"},
+{id:"q1768462048086",label:"Relocating bins for collections and returning the next day, Wednesday to Thursday - Weekly"},
+{id:"q1768462057210",label:"Washing bins and bin room - Weekly"},
+{id:"q1768462067461",label:"Maintaining one onsite toilet and topping up with consumables (the price of consumables is excluded) - Quarterly"},
+{id:"q1768462076701",label:"Washing the carpark x 1 level - Quarterly"},
+{id:"q1768462084925",label:"Scrubbing of all internal tiles - Half Yearly"},
+{id:"q1768462094628",label:"HPC of external tiles. Glass roof above each entrance is included - Half Yearly"}
+];
+var answers={};
+function renderForm(){var html="";for(var i=0;i<questions.length;i++){var q=questions[i];
+var yc=answers[q.id]===true?"active":(answers[q.id]===false?"inactive":"");
+var nc=answers[q.id]===false?"active":(answers[q.id]===true?"inactive":"");
+html+="<div class=\"question\">";
+html+="<label>"+q.label+"</label>";
+html+="<div class=\"buttons\">";
+html+="<button class=\"btn btn-yes "+yc+"\" onclick=\"setAnswer('"+q.id+"',true)\">Yes</button>";
+html+="<button class=\"btn btn-no "+nc+"\" onclick=\"setAnswer('"+q.id+"',false)\">No</button>";
+html+="</div></div>";}
+document.getElementById("form").innerHTML=html;}
+function setAnswer(qid,val){answers[qid]=val;renderForm();}
+function showMsg(text,type){var box=document.getElementById("msg");
+box.innerHTML="<div class=\"message "+type+"\">"+text+"</div>";
+if(type==="success")setTimeout(function(){box.innerHTML="";},3000);}
+function submitForm(){var missing=[];
+for(var i=0;i<questions.length;i++){if(answers[questions[i].id]===undefined)missing.push(questions[i]);}
+if(missing.length>0){showMsg("Please answer all questions ("+missing.length+" remaining)","error");return;}
+supabase.from("submissions").insert({site_id:SITE_ID,site_name:SITE_NAME,responses:answers,timestamp:new Date().toISOString()}).then(function(result){
+if(result.error){showMsg("Error: "+result.error.message,"error");}
+else{showMsg("Form submitted successfully!","success");answers={};renderForm();}});}
+renderForm();
+var today=new Date();
+document.getElementById("formDate").textContent=today.toLocaleDateString("en-US",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+</script>
+</body>
+</html>
