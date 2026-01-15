@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Results - 694-696 Old South Head Rd, Rose Bay</title>
+<style>
+body{font-family:Arial;background:#5f7a94;min-height:100vh;padding:20px;margin:0}
+.container{max-width:900px;margin:0 auto;background:white;border-radius:15px;overflow:hidden;box-shadow:0 20px 40px rgba(0,0,0,0.2)}
+.header{background:linear-gradient(135deg,#ff9800,#f57c00);color:white;padding:30px;text-align:center}
+.header h1{font-size:2em;margin:0}
+.header h2{font-size:1.6em;margin:10px 0 0 0;font-weight:bold}
+.content{padding:30px}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header">
+<h1>Daytoday Real Time SOW Status</h1>
+<h2>Site: 694-696 Old South Head Rd, Rose Bay</h2>
+</div>
+<div class="content">
+<h3>Submission History</h3>
+<div id="history">Loading...</div>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var SUPABASE_URL="https://hkrktfmvxgctjeivmobz.supabase.co";
+var SUPABASE_KEY="sb_publishable_a5_CAmMfSQrlVzUy3YhUWw_IQHb4RBy";
+var SITE_ID="694-696-old-south-head-rd-rose-bay";
+var supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+var questions=[
+{id:"q1",label:"Vacuuming and mopping internal floors - Weekly"},
+{id:"q2",label:"Polishing foyer glass doors and glass panels x 4 entries (car park foyer included) - Weekly"},
+{id:"q3",label:"Wiping down common door handles - Weekly"},
+{id:"q4",label:"Wiping down balustrades, handrails, skirting boards, power points, light switches - Weekly"},
+{id:"q5",label:"Wiping down light fittings - As required"},
+{id:"q6",label:"Polishing lift and lift tracks, 1 lift - Weekly"},
+{id:"q7",label:"Cleaning internal windows and windowsills - Weekly"},
+{id:"q8",label:"Removing cobwebs throughout the SP, internally and externally - Weekly"},
+{id:"q9",label:"Collecting rubbish throughout the SP, internally and externally - Weekly"},
+{id:"q10",label:"Wiping down intercoms - Weekly"},
+{id:"q11",label:"Wiping down letterboxes and removing junk mail - Weekly"},
+{id:"q12",label:"Deodorising hallways - Weekly"},
+{id:"q1768462010282",label:"Removing marks from walls (where possible) - As required"},
+{id:"q1768462018220",label:"Wiping down common doors, fire doors included - As required"},
+{id:"q1768462025402",label:"Clearing stormwater drains - Weekly"},
+{id:"q1768462034387",label:"Air blowing tiled footpath and driveway, and collecting foliage - Weekly"},
+{id:"q1768462048086",label:"Relocating bins for collections and returning the next day, Wednesday to Thursday - Weekly"},
+{id:"q1768462057210",label:"Washing bins and bin room - Weekly"},
+{id:"q1768462067461",label:"Maintaining one onsite toilet and topping up with consumables (the price of consumables is excluded) - Weekly"},
+{id:"q1768462076701",label:"Washing the carpark x 1 level - Quarterly"},
+{id:"q1768462084925",label:"Scrubbing of all internal tiles - Quarterly"},
+{id:"q1768462094628",label:"HPC of external tiles. Glass roof above each entrance is included - Half Yearly"},
+{id:"q1768463278165",label:"Sweeping / Vacuuming fire stairs x 2 - Half Yearly"}
+];
+function loadHistory(){supabase.from("submissions").select("*").eq("site_id",SITE_ID).order("timestamp",{ascending:false}).then(function(result){
+if(result.error){document.getElementById("history").innerHTML="<p>Error loading</p>";return;}
+if(result.data.length===0){document.getElementById("history").innerHTML="<p>No submissions yet</p>";return;}
+var html="";
+result.data.forEach(function(sub,i){
+var dt=new Date(sub.timestamp);
+var dateStr=dt.toLocaleDateString("en-US",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+var timeStr=dt.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"});
+html+="<div style=\"padding:15px;margin:10px 0;background:#f9f9f9;border-radius:8px;border-left:4px solid #667eea;cursor:pointer;transition:all 0.2s\" onmouseover=\"this.style.background='#e3f2fd'\" onmouseout=\"this.style.background='#f9f9f9'\" onclick=\"showSubmission("+i+")\">";
+html+="<div style=\"display:flex;justify-content:space-between;align-items:center\">";
+html+="<div><strong style=\"font-size:1.1em;color:#667eea\">Submission #"+(result.data.length-i)+"</strong><br>";
+html+="<span style=\"color:#666\">"+dateStr+"</span></div>";
+html+="<div style=\"text-align:right\"><span style=\"color:#999;font-size:0.9em\">"+timeStr+"</span><br>";
+html+="<span style=\"color:#667eea;font-weight:bold\">View →</span></div>";
+html+="</div></div>";});
+document.getElementById("history").innerHTML=html;
+window.allSubmissions=result.data;});}
+function showSubmission(index){var sub=window.allSubmissions[index];
+var dt=new Date(sub.timestamp);
+var dateStr=dt.toLocaleDateString("en-US",{weekday:"long",year:"numeric",month:"long",day:"numeric",hour:"2-digit",minute:"2-digit"});
+var html="<button onclick=\"loadHistory()\" style=\"padding:10px 20px;background:#667eea;color:white;border:none;border-radius:6px;cursor:pointer;margin-bottom:20px\">← Back to List</button>";
+html+="<div style=\"background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1)\">";
+html+="<h3 style=\"color:#667eea;margin:0 0 5px 0\">Submission #"+(window.allSubmissions.length-index)+"</h3>";
+html+="<p style=\"color:#666;margin:0 0 20px 0\">"+dateStr+"</p>";
+html+="<div style=\"display:grid;gap:10px\">";
+questions.forEach(function(q){var ans=sub.responses[q.id];
+html+="<div style=\"display:flex;justify-content:space-between;padding:12px;background:#f9f9f9;border-radius:6px\">";
+html+="<span>"+q.label+"</span>";
+html+="<strong style=\"color:"+(ans?"#4caf50":"#f44336")+"\">"+(ans?"Yes":"No")+"</strong>";
+html+="</div>";});
+html+="</div></div>";
+document.getElementById("history").innerHTML=html;}
+loadHistory();
+</script>
+</body>
+</html>
