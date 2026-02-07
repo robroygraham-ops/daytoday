@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Form - 9-cumberland-ave-lane-cove-north</title>
+<style>
+body{font-family:Arial;background:#5f7a94;min-height:100vh;padding:20px;margin:0}
+.container{max-width:900px;margin:0 auto;background:white;border-radius:15px;overflow:hidden;box-shadow:0 20px 40px rgba(0,0,0,0.2)}
+.header{background:linear-gradient(135deg,#4facfe,#00f2fe);color:white;padding:30px;text-align:center}
+.header h1{font-size:2em;margin:0}
+.header h2{font-size:1.3em;margin:10px 0 0 0}
+.content{padding:30px}
+.question{display:flex;justify-content:space-between;align-items:center;padding:15px;margin:10px 0;background:#f9f9f9;border-radius:8px}
+.question label{flex:1;font-size:1.05em}
+.buttons{display:flex;gap:8px}
+.btn{padding:8px 20px;border:none;border-radius:20px;font-weight:bold;cursor:pointer;font-size:0.95em}
+.btn-yes{background:#4caf50;color:white}
+.btn-no{background:#f44336;color:white}
+.btn.active{box-shadow:0 0 0 3px rgba(0,0,0,0.2);transform:scale(1.05)}
+.btn.inactive{background:#ccc;opacity:0.5}
+.submit-btn{background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:15px 40px;border:none;border-radius:25px;font-size:1.2em;font-weight:bold;cursor:pointer;margin:20px auto;display:block}
+.message{padding:15px;margin-bottom:20px;border-radius:8px;text-align:center;font-weight:bold}
+.success{background:#d4edda;color:#155724}
+.error{background:#f8d7da;color:#721c24}
+.link-box{background:#e3f2fd;padding:15px;border-radius:8px;margin-top:20px;text-align:center}
+.link-box a{color:#1976d2;text-decoration:none;font-weight:bold;font-size:1.1em}
+.calendar-container{margin-bottom:20px}
+.calendar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+.calendar-title{font-size:1.3em;font-weight:bold;color:#333}
+.calendar-nav{display:flex;gap:10px}
+.calendar-nav button{padding:8px 15px;border:none;border-radius:5px;background:#667eea;color:white;cursor:pointer;font-weight:bold}
+.calendar-nav button:hover{background:#764ba2}
+.calendar-nav button:disabled{background:#ccc;cursor:not-allowed}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.calendar-day-header{text-align:center;font-weight:bold;color:#666;padding:10px 0;font-size:0.9em}
+.calendar-day{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:all 0.2s;background:#f5f5f5}
+.calendar-day:hover{border-color:#667eea;background:#e3f2fd}
+.calendar-day.empty{background:transparent;cursor:default}
+.calendar-day.empty:hover{border-color:transparent;background:transparent}
+.calendar-day.has-submission{background:#c8e6c9;border-color:#4caf50}
+.calendar-day.has-submission:hover{background:#a5d6a7}
+.calendar-day.today{border-color:#667eea;border-width:3px}
+.calendar-day.selected{background:#667eea;color:white}
+.calendar-day.selected:hover{background:#764ba2}
+.calendar-day.future{background:#eee;color:#aaa;cursor:not-allowed}
+.calendar-day.future:hover{border-color:transparent;background:#eee}
+.calendar-day .day-number{font-size:1.1em;font-weight:bold}
+.calendar-day .day-indicator{font-size:0.7em;margin-top:2px}
+.calendar-legend{display:flex;gap:20px;margin-top:15px;justify-content:center;flex-wrap:wrap}
+.calendar-legend-item{display:flex;align-items:center;gap:5px;font-size:0.85em;color:#666}
+.calendar-legend-box{width:16px;height:16px;border-radius:4px}
+.back-btn{background:#999;color:white;padding:10px 20px;border:none;border-radius:8px;cursor:pointer;font-weight:bold;margin-bottom:20px}
+.back-btn:hover{background:#777}
+.selected-date-display{background:#e3f2fd;padding:15px;border-radius:8px;margin-bottom:20px;text-align:center}
+.selected-date-display strong{color:#667eea;font-size:1.1em}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header">
+<h1>Daytoday Real Time SOW Status Form</h1>
+<h2>Site: 9-cumberland-ave-lane-cove-north</h2>
+<p id="formDate" style="margin:10px 0 0 0;font-size:1.1em;opacity:0.95"></p>
+</div>
+<div class="content">
+<div id="calendarView"></div>
+<div id="formView" style="display:none">
+<button type="button" class="back-btn" onclick="showCalendar()">← Back to Calendar</button>
+<div id="selectedDateDisplay" class="selected-date-display"></div>
+<div id="msg"></div>
+<div id="form"></div>
+<button class="submit-btn" onclick="submitForm()">Submit Form</button>
+</div>
+<div class="link-box">
+<p style="margin:0 0 10px 0">Want to view submission history?</p>
+<a href="9-cumberland-ave-lane-cove-north-results.html">Open Results Viewer →</a>
+</div>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var SUPABASE_URL="https://hkrktfmvxgctjeivmobz.supabase.co";
+var SUPABASE_KEY="sb_publishable_a5_CAmMfSQrlVzUy3YhUWw_IQHb4RBy";
+var SITE_ID="9-cumberland-ave-lane-cove-north";
+var SITE_NAME="9-cumberland-ave-lane-cove-north";
+var supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+var questions=[
+{id:"q1",label:"Air blowing footpath and driveways, and collecting foliage - Fortnightly"},
+{id:"q2",label:"Mopping floors - Fortnightly"},
+{id:"q3",label:"Polishing Lift and Lift tracks - Fortnightly"},
+{id:"q4",label:"Wiping down balustrades, and handrails - Fortnightly"},
+{id:"q5",label:"Wiping down light fittings - As required"},
+{id:"q6",label:"Removing cobwebs throughout the SP - Fortnightly"},
+{id:"q7",label:"Collecting rubbish throughout the SP - Fortnightly"},
+{id:"q8",label:"Wiping down letterboxes and removing junk mail - Fortnightly"},
+{id:"q9",label:"Clearing stormwater drains - Fortnightly"},
+{id:"q10",label:"Relocating bins for collections and returning the next day, Thursday to Friday Yellow, Blue, and Red bins are weekly. Green bins are fortnightly. - Weekly"},
+{id:"q11",label:"Washing bins and bin room - Weekly"},
+{id:"q12",label:"Washing the carpark - Quarterly"},
+{id:"q1768464081907",label:"Heavy-duty scrubbing of all tiles - Quarterly"},
+{id:"q1768464090062",label:"Sweeping fire stairs - Quarterly"}
+];
+var answers={};
+var selectedDate=null;
+var submissionDates={};
+var currentMonth=new Date();
+var today=new Date();
+today.setHours(0,0,0,0);
+function renderCalendar(){
+var year=currentMonth.getFullYear();
+var month=currentMonth.getMonth();
+var firstDay=new Date(year,month,1);
+var lastDay=new Date(year,month+1,0);
+var startDay=firstDay.getDay();
+if(startDay===0)startDay=7;
+var daysInMonth=lastDay.getDate();
+var monthNames=["January","February","March","April","May","June","July","August","September","October","November","December"];
+var html="<div class=\"calendar-container\">";
+html+="<div class=\"calendar-header\">";
+var canGoPrev=(year>today.getFullYear()-1)||(year===today.getFullYear()-1&&month>=today.getMonth());
+var canGoNext=(year<today.getFullYear())||(year===today.getFullYear()&&month<today.getMonth());
+html+="<button type=\"button\" onclick=\"prevMonth()\" "+(canGoPrev?"":"")+">← Prev</button>";
+html+="<span class=\"calendar-title\">"+monthNames[month]+" "+year+"</span>";
+html+="<button type=\"button\" onclick=\"nextMonth()\" "+(canGoNext?"":"disabled")+">Next →</button>";
+html+="</div>";
+html+="<div class=\"calendar-grid\">";
+var dayHeaders=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+dayHeaders.forEach(function(d){html+="<div class=\"calendar-day-header\">"+d+"</div>";});
+for(var i=1;i<startDay;i++){html+="<div class=\"calendar-day empty\"></div>";}
+for(var day=1;day<=daysInMonth;day++){
+var dateObj=new Date(year,month,day);
+var dateKey=year+"-"+String(month+1).padStart(2,"0")+"-"+String(day).padStart(2,"0");
+var isToday=dateObj.getTime()===today.getTime();
+var isFuture=dateObj>today;
+var hasSub=submissionDates[dateKey];
+var classes="calendar-day";
+if(isToday)classes+=" today";
+if(isFuture)classes+=" future";
+else if(hasSub)classes+=" has-submission";
+var onclick=isFuture?"":"onclick=\"selectDate('"+dateKey+"',"+year+","+month+","+day+")\";";
+html+="<div class=\""+classes+"\" "+onclick+">";
+html+="<span class=\"day-number\">"+day+"</span>";
+if(hasSub)html+="<span class=\"day-indicator\">✓</span>";
+html+="</div>";}
+html+="</div>";
+html+="<div class=\"calendar-legend\">";
+html+="<div class=\"calendar-legend-item\"><div class=\"calendar-legend-box\" style=\"background:#c8e6c9;border:1px solid #4caf50\"></div>Has submission</div>";
+html+="<div class=\"calendar-legend-item\"><div class=\"calendar-legend-box\" style=\"background:#f5f5f5;border:3px solid #667eea\"></div>Today</div>";
+html+="<div class=\"calendar-legend-item\"><div class=\"calendar-legend-box\" style=\"background:#eee\"></div>Future (disabled)</div>";
+html+="</div></div>";
+document.getElementById("calendarView").innerHTML=html;
+}
+function prevMonth(){
+currentMonth.setMonth(currentMonth.getMonth()-1);
+loadSubmissionDates();
+}
+function nextMonth(){
+var nextM=new Date(currentMonth);
+nextM.setMonth(nextM.getMonth()+1);
+if(nextM.getFullYear()<today.getFullYear()||(nextM.getFullYear()===today.getFullYear()&&nextM.getMonth()<=today.getMonth())){
+currentMonth=nextM;
+loadSubmissionDates();
+}}
+function selectDate(dateKey,year,month,day){
+selectedDate=new Date(year,month,day);
+answers={};
+loadSubmissionForDate(dateKey);
+}
+function showCalendar(){
+document.getElementById("calendarView").style.display="block";
+document.getElementById("formView").style.display="none";
+loadSubmissionDates();
+}
+function showForm(){
+document.getElementById("calendarView").style.display="none";
+document.getElementById("formView").style.display="block";
+var options={weekday:"long",year:"numeric",month:"long",day:"numeric"};
+document.getElementById("selectedDateDisplay").innerHTML="<strong>Editing: "+selectedDate.toLocaleDateString("en-US",options)+"</strong>";
+renderForm();
+}
+function loadSubmissionDates(){
+var year=currentMonth.getFullYear();
+var month=currentMonth.getMonth();
+var startOfMonth=new Date(year,month,1,0,0,0).toISOString();
+var endOfMonth=new Date(year,month+1,0,23,59,59).toISOString();
+(async function(){
+try{
+var result=await supabase.from("submissions").select("timestamp").eq("site_id",SITE_ID).gte("timestamp",startOfMonth).lte("timestamp",endOfMonth);
+submissionDates={};
+if(result.data){
+result.data.forEach(function(sub){
+var d=new Date(sub.timestamp);
+var key=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+submissionDates[key]=true;
+});}
+renderCalendar();
+}catch(e){console.error(e);renderCalendar();}})();
+}
+function loadSubmissionForDate(dateKey){
+var parts=dateKey.split("-");
+var year=parseInt(parts[0]);
+var month=parseInt(parts[1])-1;
+var day=parseInt(parts[2]);
+var startOfDay=new Date(year,month,day,0,0,0).toISOString();
+var endOfDay=new Date(year,month,day,23,59,59,999).toISOString();
+(async function(){
+try{
+var result=await supabase.from("submissions").select("*").eq("site_id",SITE_ID).gte("timestamp",startOfDay).lte("timestamp",endOfDay).order("created_at",{ascending:false}).limit(1);
+answers={};
+if(result.data&&result.data.length>0){
+var latestResponses=result.data[0].responses;
+for(var key in latestResponses){answers[key]=(latestResponses[key]===true||latestResponses[key]==="true");}
+}
+showForm();
+}catch(e){console.error(e);showForm();}})();
+}
+function renderForm(){var html="";for(var i=0;i<questions.length;i++){var q=questions[i];
+var ans=answers[q.id];
+var yc=(ans===true)?"active":((ans===false)?"inactive":"");
+var nc=(ans===false)?"active":((ans===true)?"inactive":"");
+html+="<div class=\"question\">";
+html+="<label>"+q.label+"</label>";
+html+="<div class=\"buttons\">";
+html+="<button type=\"button\" class=\"btn btn-yes "+yc+"\" onclick=\"setAnswer('"+q.id+"',true)\">Yes</button>";
+html+="<button type=\"button\" class=\"btn btn-no "+nc+"\" onclick=\"setAnswer('"+q.id+"',false)\">No</button>";
+html+="</div></div>";}
+document.getElementById("form").innerHTML=html;}
+function setAnswer(qid,val){answers[qid]=val;renderForm();}
+function showMsg(text,type){var box=document.getElementById("msg");
+box.innerHTML="<div class=\"message "+type+"\">"+text+"</div>";
+if(type==="success")setTimeout(function(){box.innerHTML="";},3000);}
+function submitForm(){var missing=[];
+for(var i=0;i<questions.length;i++){if(answers[questions[i].id]===undefined)missing.push(questions[i]);}
+if(missing.length>0){showMsg("Please answer all questions ("+missing.length+" remaining)","error");return;}
+var submitTimestamp=new Date(selectedDate);
+submitTimestamp.setHours(12,0,0,0);
+(async function(){
+try{
+var result=await supabase.from("submissions").insert({site_id:SITE_ID,site_name:SITE_NAME,responses:answers,timestamp:submitTimestamp.toISOString()});
+if(result.error){showMsg("Error: "+result.error.message,"error");}
+else{alert("Form submitted successfully!");showCalendar();}
+}catch(e){showMsg("Error: "+e.message,"error");}})();}
+document.getElementById("formDate").textContent="Select a date to submit or edit";
+loadSubmissionDates();
+</script>
+</body>
+</html>
